@@ -191,25 +191,7 @@ INSERT INTO WatchHistory (watch_id, user_id, movie_id, watch_date, watch_duratio
     LEFT JOIN WatchHistory w ON m.movie_id = w.movie_id
     WHERE w.watch_id IS NULL;
 
--- Find each user's binge-watching streak (max consecutive days watched).
-    WITH DailyWatch AS (
-      SELECT user_id, watch_date,
-             LAG(watch_date) OVER(PARTITION BY user_id ORDER BY watch_date) AS prev_day
-      FROM WatchHistory
-    )
-    SELECT user_id, MAX(streak) AS longest_streak
-    FROM (
-      SELECT user_id,
-             CASE WHEN watch_date = prev_day + INTERVAL '1 day'
-                  THEN 1 ELSE 0 END AS streak_flag
-      FROM DailyWatch
-    ) t
-    JOIN (
-      SELECT user_id, COUNT(*) AS streak
-      FROM DailyWatch
-      GROUP BY user_id
-    ) s USING(user_id)
-    GROUP BY user_id;
+
 -- Find movies with the highest completion rate (watch_duration / duration_minutes).
     SELECT m.title,
            AVG(w.watch_duration * 1.0 / m.duration_minutes) AS avg_completion_rate
